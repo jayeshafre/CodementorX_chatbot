@@ -1,0 +1,611 @@
+{
+	"info": {
+		"_postman_id": "codementorx-fastapi-collection",
+		"name": "CodementorX FastAPI Chatbot API",
+		"description": "Complete API testing collection for FastAPI Chatbot service with JWT Authentication integration.\n\n**Features Tested:**\n- JWT Token Authentication (from Django)\n- AI Chat Messaging\n- Conversation Management (localStorage version)\n- Model Selection\n- Error Handling\n- Health Monitoring\n\n**Environment Variables:**\n- `fastapi_base_url`: FastAPI base URL (default: http://127.0.0.1:8001)\n- `access_token`: JWT access token from Django auth\n- `conversation_id`: Active conversation ID (auto-generated)\n- `model_name`: AI model to use (default: gpt-4o-mini)\n\n**Setup Instructions:**\n1. Run Django auth collection first to get JWT token\n2. Copy access_token to FastAPI environment\n3. Start FastAPI service: uvicorn main:app --reload --port 8001\n4. Run this collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🟢 Health & Setup",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer invalid-token-here"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"This should fail with invalid token\"\n}"
+						},
+						"url": {
+							"raw": "{{fastapi_base_url}}/api/chat/message",
+							"host": ["{{fastapi_base_url}}"],
+							"path": ["api", "chat", "message"]
+						},
+						"description": "Test chat request with invalid JWT token"
+					}
+				},
+				{
+					"name": "Empty Message",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Returns validation error', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"    pm.expect(jsonData.detail).to.include('Message cannot be empty');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"\",\n    \"model\": \"{{model_name}}\"\n}"
+						},
+						"url": {
+							"raw": "{{fastapi_base_url}}/api/chat/message",
+							"host": ["{{fastapi_base_url}}"],
+							"path": ["api", "chat", "message"]
+						},
+						"description": "Test chat request with empty message"
+					}
+				},
+				{
+					"name": "Invalid Model Parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test('Returns validation error', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"This should fail with invalid parameters\",\n    \"temperature\": 3.0,\n    \"max_tokens\": -100\n}"
+						},
+						"url": {
+							"raw": "{{fastapi_base_url}}/api/chat/message",
+							"host": ["{{fastapi_base_url}}"],
+							"path": ["api", "chat", "message"]
+						},
+						"description": "Test chat request with invalid model parameters"
+					}
+				},
+				{
+					"name": "Invalid Conversation ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Returns validation error', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"    pm.expect(jsonData.detail).to.include('Invalid conversation ID');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"This should fail with invalid conversation ID\"\n}"
+						},
+						"url": {
+							"raw": "{{fastapi_base_url}}/api/chat/conversations/invalid@conversation#id!/continue",
+							"host": ["{{fastapi_base_url}}"],
+							"path": ["api", "chat", "conversations", "invalid@conversation#id!", "continue"]
+						},
+						"description": "Test conversation continuation with invalid conversation ID"
+					}
+				},
+				{
+					"name": "Malformed JSON Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test('Returns JSON parse error', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"This is malformed JSON\",\n    \"model\": \"gpt-4o-mini\"\n    // Missing comma and invalid comment\n}"
+						},
+						"url": {
+							"raw": "{{fastapi_base_url}}/api/chat/message",
+							"host": ["{{fastapi_base_url}}"],
+							"path": ["api", "chat", "message"]
+						},
+						"description": "Test request with malformed JSON"
+					}
+				}
+			],
+			"description": "Test error handling and validation"
+		},
+		{
+			"name": "🧪 Load Testing & Performance",
+			"item": [
+				{
+					"name": "Rapid Fire Messages",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Quick response generated', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.be.a('string').and.not.be.empty;",
+									"});",
+									"",
+									"pm.test('Response time is reasonable for quick query', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(10000); // 10 seconds for simple queries",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Quick question: what's 2+2?\",\n    \"model\": \"gpt-3.5-turbo\",\n    \"temperature\": 0.1,\n    \"max_tokens\": 50\n}"
+						},
+						"url": {
+							"raw": "{{fastapi_base_url}}/api/chat/message",
+							"host": ["{{fastapi_base_url}}"],
+							"path": ["api", "chat", "message"]
+						},
+						"description": "Quick message for performance testing"
+					}
+				},
+				{
+					"name": "Long Context Message",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Long context handled successfully', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.be.a('string');",
+									"    pm.expect(jsonData.message.length).to.be.greaterThan(100);",
+									"});",
+									"",
+									"pm.test('Response time acceptable for complex query', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(45000); // 45 seconds for complex queries",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Can you summarize our entire discussion and provide next steps?\",\n    \"model\": \"{{model_name}}\",\n    \"temperature\": 0.7,\n    \"max_tokens\": 2000,\n    \"context\": [\n        {\"role\": \"user\", \"content\": \"Message 1: I need help with FastAPI authentication\", \"timestamp\": \"2025-01-20T10:00:00Z\"},\n        {\"role\": \"assistant\", \"content\": \"Response 1: I can help you with FastAPI authentication...\", \"timestamp\": \"2025-01-20T10:00:05Z\"},\n        {\"role\": \"user\", \"content\": \"Message 2: How do I implement JWT middleware?\", \"timestamp\": \"2025-01-20T10:01:00Z\"},\n        {\"role\": \"assistant\", \"content\": \"Response 2: Here's how to implement JWT middleware...\", \"timestamp\": \"2025-01-20T10:01:10Z\"},\n        {\"role\": \"user\", \"content\": \"Message 3: What about token refresh?\", \"timestamp\": \"2025-01-20T10:02:00Z\"},\n        {\"role\": \"assistant\", \"content\": \"Response 3: For token refresh, you should...\", \"timestamp\": \"2025-01-20T10:02:15Z\"},\n        {\"role\": \"user\", \"content\": \"Message 4: How do I handle CORS?\", \"timestamp\": \"2025-01-20T10:03:00Z\"},\n        {\"role\": \"assistant\", \"content\": \"Response 4: CORS in FastAPI can be handled...\", \"timestamp\": \"2025-01-20T10:03:20Z\"},\n        {\"role\": \"user\", \"content\": \"Message 5: What about database integration?\", \"timestamp\": \"2025-01-20T10:04:00Z\"},\n        {\"role\": \"assistant\", \"content\": \"Response 5: For database integration with FastAPI...\", \"timestamp\": \"2025-01-20T10:04:30Z\"}\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{fastapi_base_url}}/api/chat/message",
+							"host": ["{{fastapi_base_url}}"],
+							"path": ["api", "chat", "message"]
+						},
+						"description": "Message with extensive context for performance testing"
+					}
+				},
+				{
+					"name": "Concurrent Request Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Service handles concurrent requests', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('conversation_id');",
+									"    pm.expect(jsonData.message).to.be.a('string').and.not.be.empty;",
+									"});",
+									"",
+									"// Generate unique conversation ID for this test",
+									"const uniqueId = 'load-test-' + Date.now();",
+									"pm.environment.set('load_test_conv_id', uniqueId);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Load test message {{$randomInt}}: How does FastAPI handle concurrent requests?\",\n    \"conversation_id\": \"load-test-{{$randomUUID}}\",\n    \"model\": \"gpt-3.5-turbo\",\n    \"temperature\": 0.5,\n    \"max_tokens\": 200\n}"
+						},
+						"url": {
+							"raw": "{{fastapi_base_url}}/api/chat/message",
+							"host": ["{{fastapi_base_url}}"],
+							"path": ["api", "chat", "message"]
+						},
+						"description": "Test concurrent request handling (run multiple times simultaneously)"
+					}
+				}
+			],
+			"description": "Performance and load testing scenarios"
+		},
+		{
+			"name": "🔧 Integration Tests",
+			"item": [
+				{
+					"name": "End-to-End Chat Flow",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate unique conversation for this test",
+									"const convId = 'e2e-test-' + Date.now();",
+									"pm.environment.set('e2e_conversation_id', convId);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('E2E: Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('E2E: Complete conversation flow works', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData).to.have.property('conversation_id');",
+									"    pm.expect(jsonData).to.have.property('model_used');",
+									"    pm.expect(jsonData).to.have.property('timestamp');",
+									"    pm.expect(jsonData.message).to.include('FastAPI');",
+									"});",
+									"",
+									"pm.test('E2E: Token usage tracking works', function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.token_usage) {",
+									"        pm.expect(jsonData.token_usage).to.have.property('total_tokens');",
+									"        pm.expect(jsonData.token_usage.total_tokens).to.be.above(0);",
+									"    }",
+									"});",
+									"",
+									"pm.test('E2E: Metadata is populated', function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.metadata) {",
+									"        pm.expect(jsonData.metadata).to.have.property('stateless');",
+									"        pm.expect(jsonData.metadata.stateless).to.be.true;",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Complete integration test: Explain how to set up FastAPI with PostgreSQL, JWT authentication, and Docker deployment. Include code examples.\",\n    \"conversation_id\": \"{{e2e_conversation_id}}\",\n    \"model\": \"{{model_name}}\",\n    \"temperature\": 0.7,\n    \"max_tokens\": 2500,\n    \"system_prompt\": \"You are an expert DevOps engineer and full-stack developer. Provide comprehensive, production-ready solutions with code examples.\",\n    \"context\": []\n}"
+						},
+						"url": {
+							"raw": "{{fastapi_base_url}}/api/chat/message",
+							"host": ["{{fastapi_base_url}}"],
+							"path": ["api", "chat", "message"]
+						},
+						"description": "End-to-end integration test with comprehensive chat request"
+					}
+				},
+				{
+					"name": "Cross-Service Token Validation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Cross-service: JWT validation works', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Cross-service: User context preserved', function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.metadata) {",
+									"        pm.expect(jsonData.metadata).to.have.property('user_id');",
+									"        pm.expect(jsonData.metadata).to.have.property('user_email');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Test cross-service authentication: Can you confirm my user context is properly validated?\",\n    \"model\": \"{{model_name}}\",\n    \"temperature\": 0.3,\n    \"max_tokens\": 500\n}"
+						},
+						"url": {
+							"raw": "{{fastapi_base_url}}/api/chat/message",
+							"host": ["{{fastapi_base_url}}"],
+							"path": ["api", "chat", "message"]
+						},
+						"description": "Test JWT token validation between Django and FastAPI services"
+					}
+				}
+			],
+			"description": "End-to-end integration and cross-service testing"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script for FastAPI collection",
+					"",
+					"// Check if we have a valid access token",
+					"const accessToken = pm.environment.get('access_token');",
+					"if (!accessToken && pm.request.url.path.some(segment => segment === 'api')) {",
+					"    console.warn('⚠️  No access token found. Please run Django auth collection first to get JWT token.');",
+					"}",
+					"",
+					"// Set default values if not present",
+					"if (!pm.environment.get('model_name')) {",
+					"    pm.environment.set('model_name', 'gpt-4o-mini');",
+					"}",
+					"if (!pm.environment.get('default_temperature')) {",
+					"    pm.environment.set('default_temperature', '0.7');",
+					"}",
+					"if (!pm.environment.get('default_max_tokens')) {",
+					"    pm.environment.set('default_max_tokens', '1000');",
+					"}",
+					"",
+					"// Add request timestamp for debugging",
+					"pm.environment.set('request_timestamp', new Date().toISOString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script for FastAPI collection",
+					"",
+					"pm.test('Response time is acceptable', function () {",
+					"    const threshold = parseInt(pm.environment.get('performance_threshold_ms')) || 30000;",
+					"    pm.expect(pm.response.responseTime).to.be.below(threshold);",
+					"});",
+					"",
+					"pm.test('Response has JSON content type', function () {",
+					"    if (pm.response.code < 400) {",
+					"        pm.response.to.have.header('Content-Type');",
+					"        pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"    }",
+					"});",
+					"",
+					"// Log response details for debugging",
+					"if (pm.response.code >= 400) {",
+					"    console.log('❌ Error Response:', {",
+					"        status: pm.response.code,",
+					"        statusText: pm.response.status,",
+					"        body: pm.response.json(),",
+					"        headers: pm.response.headers.toObject(),",
+					"        responseTime: pm.response.responseTime + 'ms'",
+					"    });",
+					"} else {",
+					"    console.log('✅ Success Response:', {",
+					"        status: pm.response.code,",
+					"        responseTime: pm.response.responseTime + 'ms',",
+					"        size: pm.response.responseSize + ' bytes'",
+					"    });",
+					"}",
+					"",
+					"// Track token usage across requests",
+					"if (pm.response.code === 200) {",
+					"    try {",
+					"        const jsonData = pm.response.json();",
+					"        if (jsonData.token_usage && jsonData.token_usage.total_tokens) {",
+					"            const currentUsage = parseInt(pm.environment.get('total_tokens_used') || '0');",
+					"            const newTotal = currentUsage + jsonData.token_usage.total_tokens;",
+					"            pm.environment.set('total_tokens_used', newTotal.toString());",
+					"            console.log('📊 Token Usage - This Request:', jsonData.token_usage.total_tokens, 'Total Session:', newTotal);",
+					"        }",
+					"    } catch (e) {",
+					"        // Ignore JSON parse errors for non-JSON responses",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "fastapi_base_url",
+			"value": "http://127.0.0.1:8001",
+			"type": "string",
+			"description": "Base URL for FastAPI Chatbot service"
+		},
+		{
+			"key": "api_version",
+			"value": "v1",
+			"type": "string",
+			"description": "API version"
+		}
+	]
+}	
