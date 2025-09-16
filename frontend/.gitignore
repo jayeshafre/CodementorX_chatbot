@@ -23,4 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
+<<<<<<< HEAD
 
+=======
+.gitignore
+Dockerfile
+>>>>>>> 6c4aadce704b8a47a421e3a1e89d7b77d23cd6b4
