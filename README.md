@@ -2,6 +2,14 @@
 
 A professional full-stack chatbot platform showcasing modern web development practices with React, Django, FastAPI, and PostgreSQL.
 
+## 🖼️ Screenshoots
+
+<img width="1919" height="941" alt="Screenshot 2025-09-05 161735" src="https://github.com/user-attachments/assets/c4209030-9049-489a-bfda-319a7f0f9b49" />
+<img width="1879" height="940" alt="Screenshot 2025-09-05 161646" src="https://github.com/user-attachments/assets/51d15714-2696-4ef4-94cd-4bc54f4b9625" />
+<img width="1905" height="934" alt="Screenshot 2025-09-05 161722" src="https://github.com/user-attachments/assets/721d4ee7-9c30-4e41-98a7-d5e928c59b05" />
+<img width="1919" height="933" alt="Screenshot 2025-09-05 161834" src="https://github.com/user-attachments/assets/fe1bc048-3c5a-419e-af18-a2d31e8f4bd3" />
+
+
 ## 🚀 Features
 
 - **Secure Authentication**: JWT-based user authentication with Django REST Framework
@@ -21,18 +29,16 @@ A professional full-stack chatbot platform showcasing modern web development pra
 - Django REST Framework (Authentication)
 - FastAPI (Chatbot Service)
 - PostgreSQL (Primary Database)
-  
 
 ### DevOps
 - Docker & Docker Compose
--
+- Railway (Deployment)
 
 ## 📋 Prerequisites
 
 - Node.js (v18+)
 - Python (v3.9+)
 - PostgreSQL (v13+)
-- Redis (v6+)
 - Docker & Docker Compose
 
 ## 🚀 Quick Start
@@ -43,8 +49,6 @@ A professional full-stack chatbot platform showcasing modern web development pra
    ```bash
    git clone https://github.com/yourusername/CodementorX.git
    cd CodementorX
-<<<<<<< HEAD
-=======
    ```
 
 2. **Environment Setup**
@@ -132,10 +136,6 @@ docker-compose up frontend
 # Django tests
 cd backend/django_auth
 python manage.py test
-
-# FastAPI tests
-cd backend/chatbot
-pytest tests/ -v
 ```
 
 ### Frontend Tests
@@ -143,12 +143,6 @@ pytest tests/ -v
 cd frontend
 npm test
 npm run lint
-```
-
-### Integration Tests
-```bash
-# Run full test suite
-docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 ```
 
 ## 📦 Production Deployment
@@ -171,37 +165,36 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 # Database
 DATABASE_URL=postgresql://user:password@host:port/database
 
-# Redis
-REDIS_URL=redis://host:port/0
-
 # FastAPI Settings
 CHATBOT_API_KEY=your-openai-api-key
 CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 
 # Frontend
-VITE_DJANGO_API_URL=https://your-backend.render.com
-VITE_CHATBOT_API_URL=https://your-chatbot.render.com/api
+VITE_DJANGO_API_URL=https://your-backend.railway.app
+VITE_CHATBOT_API_URL=https://your-chatbot.railway.app/api
 ```
 
-### Deploy to Render
+### Deploy to Railway
 
 1. **Backend Deployment:**
-   - Create new Web Service on Render
-   - Connect your GitHub repository
-   - Set build command: `pip install -r requirements.txt`
-   - Set start command: `python manage.py migrate && gunicorn config.wsgi:application`
+   - Connect your GitHub repository to Railway
+   - Create new service for Django backend
+   - Set environment variables in Railway dashboard
+   - Railway will automatically detect and build your Django app
 
-2. **Frontend Deployment:**
-   - Create new Static Site on Render
+2. **Chatbot Service Deployment:**
+   - Create another service for FastAPI chatbot
+   - Configure environment variables
+   - Railway will handle the FastAPI deployment
+
+3. **Frontend Deployment:**
+   - Create a service for the React frontend
    - Set build command: `npm ci && npm run build`
-   - Set publish directory: `dist`
+   - Railway will serve the static files
 
-### Deploy to Vercel (Frontend)
-
-```bash
-npm install -g vercel
-vercel --prod
-```
+4. **Database:**
+   - Add PostgreSQL plugin in Railway
+   - Railway will provide the DATABASE_URL automatically
 
 ## 🔧 Configuration
 
@@ -235,26 +228,101 @@ Settings in `frontend/src/api/`:
 - `feature/*`: Feature branches
 - `hotfix/*`: Production fixes
 
-### Pull Request Process
-1. Create feature branch from `develop`
-2. Make changes with tests
-3. Run linting and tests locally
-4. Submit PR to `develop`
-5. Code review and CI checks
-6. Merge after approval
-
 ## 📊 Project Structure
 
 ```
 CodementorX/
-├── .github/workflows/           # GitHub Actions CI/CD
+├── README.md
+├── LICENSE
+├── .gitignore
+├── .dockerignore
+├── .env
+├── .env.example
+├── docker-compose.yml
+│
+├── postman/                           # Postman collections & environments
+│   ├── Collection.json
+│   ├── Environment.json
+│   ├── Fastapi_collection.json
+│   └── Fastapi_environment.json
+│
 ├── backend/
-│   ├── django_auth/            # Django REST API
-│   └── chatbot/                # FastAPI chatbot service
-├── frontend/                   # React application
-├── docker-compose.yml          # Docker services
-├── .env.example               # Environment template
-└── README.md                  # This file
+│   │
+│   ├── django_auth/                   # Django REST + JWT
+│   │   ├── manage.py
+│   │   ├── config/
+│   │   │   ├── __init__.py
+│   │   │   ├── asgi.py
+│   │   │   ├── settings.py            # JWT + DB configs
+│   │   │   ├── urls.py
+│   │   │   └── wsgi.py
+│   │   │
+│   │   ├── users/                     # Django Auth app
+│   │   │   ├── __init__.py
+│   │   │   ├── admin.py
+│   │   │   ├── apps.py
+│   │   │   ├── models.py              # Custom User model
+│   │   │   ├── serializers.py
+│   │   │   ├── urls.py                # /auth/ endpoints
+│   │   │   ├── views.py               # login, register, profile
+│   │   │   └── permissions.py         # role-based access
+│   │   │
+│   │   ├── requirements.txt
+│   │   └── Dockerfile
+│   │
+│   ├── chatbot/                       # FastAPI service
+│   │   ├── main.py                    # FastAPI app entry
+│   │   ├── routes.py                  # /chat endpoints
+│   │   ├── models.py                  # Chatbot models
+│   │   ├── services.py                # Business logic
+│   │   ├── utils.py                   # verify_jwt() with Django secret
+│   │   ├── requirements.txt
+│   │   └── Dockerfile
+│   │
+│   └── database/                      # Shared DB (optional, PostgreSQL)
+│       ├── init.sql
+│       └── migrations/                # Alembic for FastAPI OR Django migrations
+│
+├── frontend/                          # React (Auth + Chat)
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── .eslintrc.json
+│   ├── .prettierrc
+│   ├── Dockerfile
+│   │
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx
+│       │
+│       ├── api/
+│       │   ├── axiosClient.js         # Django API client
+│       │   └── chatbotClient.js       # FastAPI API client
+│       │
+│       ├── context/
+│       │   ├── AuthContext.jsx        # Global auth state
+│       │   └── ChatContext.jsx
+│       │
+│       ├── components/
+│       │   ├── Navbar.jsx
+│       │   └── ProtectedRoute.jsx
+│       │
+│       ├── pages/                     # Auth pages
+│       │   ├── Login.jsx
+│       │   ├── Register.jsx
+│       │   ├── Profile.jsx
+│       │   ├── ForgotPassword.jsx
+│       │   └── ResetPassword.jsx
+│       │
+│       ├── chatbot/                   # Chatbot UI
+│       │   ├── ChatBox.jsx
+│       │   ├── Sidebar.jsx
+│       │   └── ChatInterface.jsx
+│       │
+│       └── styles/
+│           └── tailwind.css
 ```
 
 ## 🔍 Troubleshooting
@@ -269,11 +337,6 @@ CodementorX/
 - Ensure PostgreSQL is running
 - Check `DATABASE_URL` format
 - Verify database credentials
-
-**Redis Connection:**
-- Confirm Redis server is running
-- Check `REDIS_URL` configuration
-- Verify Redis port accessibility
 
 **Docker Issues:**
 - Clear Docker cache: `docker system prune -a`
@@ -307,14 +370,15 @@ docker-compose exec django python manage.py shell
 
 ### Development Setup
 ```bash
-# Install pre-commit hooks
-pip install pre-commit
-pre-commit install
+# Install development dependencies
+cd backend/django_auth && pip install -r requirements-dev.txt
+cd backend/chatbot && pip install -r requirements-dev.txt
+cd frontend && npm install
 
 # Run quality checks
-make lint
-make test
-make security-check
+python -m black .
+python -m isort .
+npm run lint
 ```
 
 ## 📄 License
@@ -323,8 +387,6 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 ## 🙋‍♂️ Support
 - **Email**: jayeshafre1@gmail.com
-
-
 
 ---
 
