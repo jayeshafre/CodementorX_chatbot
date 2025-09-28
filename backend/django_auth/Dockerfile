@@ -1,78 +1,78 @@
-# Django Auth Service Dockerfile
+# Multi-stage Django Dockerfile for CodeMentorX
+# Stage 1: Builder (reduces final image size by ~40%)
 FROM python:3.11-slim as builder
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
+# Set environment variables for build stage
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    postgresql-client \
+# Install system dependencies needed for building Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Create and activate virtual environment
+# Create virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy requirements and install Python dependencies
-COPY requirements.txt /tmp/
+COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install -r /tmp/requirements.txt
+    pip install -r requirements.txt
 
-# Production stage
-FROM python:3.11-slim as production
+# Stage 2: Production (smaller final image)
+FROM python:3.11-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PATH="/opt/venv/bin:$PATH"
+# Set environment variables for production
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    DJANGO_SETTINGS_MODULE=config.settings
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    postgresql-client \
+# Install only runtime system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
-    netcat-traditional \
-    curl \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Create non-root user
+# Create non-root user for security (production best practice)
 RUN groupadd -r django && useradd -r -g django django
 
 # Copy virtual environment from builder stage
 COPY --from=builder /opt/venv /opt/venv
 
-# Set work directory
+# Set working directory
 WORKDIR /app
 
-# Copy entrypoint script
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Copy entrypoint script and make it executable
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
-# Copy project files
+# Copy Django application code
 COPY . .
 
-# Create necessary directories and set permissions
+# Create directories for static files and media (with proper permissions)
 RUN mkdir -p /app/staticfiles /app/media && \
-    chown -R django:django /app && \
-    chown django:django /entrypoint.sh
+    chown -R django:django /app
 
-# Switch to non-root user
+# Switch to non-root user (security best practice)
 USER django
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+# Note: collectstatic will run in entrypoint.sh at runtime when env vars are available
 
-# Expose port
+# Expose port 8000 (Django default)
 EXPOSE 8000
 
-# Set entrypoint
-ENTRYPOINT ["/entrypoint.sh"]
+# Health check to ensure Django is responding
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/api/health/', timeout=5)"
 
-# Run application
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Use entrypoint script for proper initialization
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Default command: run Django with Gunicorn (production WSGI server)
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "60", "config.wsgi:application"]

@@ -15,7 +15,7 @@ from drf_spectacular.views import (
 
 
 def health_check(request):
-    """Simple health check endpoint for Docker"""
+    """Simple health check endpoint for Docker/K8s"""
     return JsonResponse({
         'status': 'healthy',
         'service': 'CodementorX Django Auth',
@@ -30,76 +30,41 @@ def api_root(request):
         'message': 'Welcome to JWT Authentication API',
         'version': '1.0.0',
         'endpoints': {
-            'auth': {
-                'register': '/api/auth/register/',
-                'login': '/api/auth/login/',
-                'logout': '/api/auth/logout/',
-                'refresh': '/api/auth/refresh/',
-                'profile': '/api/auth/profile/',
-                'change-password': '/api/auth/change-password/',
-                'forgot-password': '/api/auth/forgot-password/',
-                'reset-password': '/api/auth/reset-password/',
-                'health': '/api/auth/health/',
-            },
-            'documentation': {
+            'auth': '/api/v1/auth/',
+            'docs': {
                 'swagger': '/api/docs/',
                 'redoc': '/api/redoc/',
                 'schema': '/api/schema/',
             },
             'admin': '/admin/',
+            'health': '/health/',
         },
         'status': 'active'
-    })
-
-
-def auth_root(request):
-    """Auth API root endpoint for direct /auth/ access"""
-    return JsonResponse({
-        'message': 'CodementorX Authentication API',
-        'version': '1.0.0',
-        'endpoints': {
-            'register': '/auth/register/',
-            'login': '/auth/login/',
-            'logout': '/auth/logout/',
-            'refresh': '/auth/refresh/',
-            'profile': '/auth/profile/',
-            'change_password': '/auth/change-password/',
-            'forgot_password': '/auth/forgot-password/',
-            'reset_password': '/auth/reset-password/',
-            'health': '/auth/health/',
-        }
     })
 
 
 urlpatterns = [
     # Admin interface
     path('admin/', admin.site.urls),
-    
-    # Health check endpoints (both with and without trailing slash)
+
+    # Health check
     path('health/', health_check, name='health'),
-    path('health', health_check, name='health_no_slash'),
-    
-    # Direct auth endpoints (for backward compatibility)
-    path('auth/', auth_root, name='auth_root'),
-    path('auth/', include('users.urls')),
-    
-    # API root
+
+    # API Root
     path('api/', api_root, name='api_root'),
-    
-    # API Authentication endpoints  
-    path('api/auth/', include('users.urls')),
-    
+
+    # API Authentication endpoints (choose ONE: custom or Djoser)
+    path('api/v1/auth/', include('users.urls')),
+    # path("api/v1/auth/", include("djoser.urls")),
+    # path("api/v1/auth/", include("djoser.urls.jwt")),
+
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-
-    # Djoser endpoints (if using)
-    path("api/auth/", include("djoser.urls")),
-    path("api/auth/", include("djoser.urls.jwt")),
 ]
 
-# Serve media files in development
+# Serve static/media in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
