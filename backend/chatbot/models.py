@@ -44,7 +44,7 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=10000, description="User message")
     conversation_id: Optional[str] = Field(default=None, description="Conversation ID for context")
     context: Optional[List[ChatMessage]] = Field(default=[], description="Previous conversation context")
-    model: Optional[str] = Field(default="deepseek-chat", description="AI model to use")
+    model: Optional[str] = Field(default="gpt-4o-mini", description="AI model to use")
     temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0, description="Response creativity")
     max_tokens: Optional[int] = Field(default=1000, ge=1, le=4000, description="Maximum response tokens")
     system_prompt: Optional[str] = Field(default=None, description="Custom system prompt")
@@ -67,7 +67,7 @@ class ChatRequest(BaseModel):
                 "message": "How do I implement JWT authentication in Django?",
                 "conversation_id": "conv_123456",
                 "context": [],
-                "model": "deepseek-chat",
+                "model": "gpt-4o-mini",
                 "temperature": 0.7,
                 "max_tokens": 1000
             }
@@ -90,7 +90,7 @@ class ChatResponse(BaseModel):
                 "message": "To implement JWT authentication in Django, you can use the djangorestframework-simplejwt package...",
                 "conversation_id": "conv_123456",
                 "timestamp": "2024-09-04T12:00:00Z",
-                "model_used": "deepseek-chat",
+                "model_used": "gpt-4o-mini",
                 "token_usage": {
                     "prompt_tokens": 50,
                     "completion_tokens": 200,

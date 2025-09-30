@@ -1,83 +1,79 @@
-# FastAPI Chatbot Service Requirements
+# FastAPI Chatbot Service - Production Requirements
+# Optimized for Docker containers and production deployment
 
 # ---------------------------
-# Core FastAPI and web framework
+# Core FastAPI and ASGI server
 # ---------------------------
 fastapi==0.109.2
-uvicorn[standard]==0.27.1
-python-multipart==0.0.9
+uvicorn[standard]==0.27.1        # High-performance ASGI server with standard features
+python-multipart==0.0.9          # For form data handling
 
 # ---------------------------
-# Authentication and JWT
+# Authentication and Security
 # ---------------------------
-PyJWT==2.8.0
-cryptography==42.0.5
+PyJWT==2.8.0                     # JWT token handling
+cryptography==42.0.5             # Cryptographic operations
+bcrypt==4.1.2                    # Password hashing
+passlib[bcrypt]==1.7.4            # Password utilities
 
 # ---------------------------
-# AI and OpenAI
+# AI and OpenAI Integration
 # ---------------------------
-openai==1.12.0
-
-
-
-# ---------------------------
-# Environment and configuration
-# ---------------------------
-python-dotenv==1.0.1
-python-decouple==3.8
+openai==1.12.0                   # OpenAI API client
+tiktoken==0.6.0                  # Token counting for OpenAI models
 
 # ---------------------------
-# Data validation and serialization
+# HTTP Clients and Async
 # ---------------------------
-pydantic==2.6.3
-pydantic-core==2.16.3   # Compatible with Python 3.11
+httpx==0.26.0                    # Modern async HTTP client
+requests==2.31.0                 # Synchronous HTTP client (fallback)
+aiohttp==3.9.3                   # Alternative async HTTP client
 
 # ---------------------------
-# HTTP client for external API calls
+# Data Validation and Serialization
 # ---------------------------
-httpx==0.26.0
-requests==2.31.0
+pydantic==2.6.3                  # Data validation and settings
+pydantic-core==2.16.3           # Pydantic core (Python 3.11 compatible)
+pydantic-settings==2.2.1         # Settings management
 
 # ---------------------------
-# Async utilities
+# Environment Configuration
 # ---------------------------
-asyncio-throttle==1.0.2
+python-dotenv==1.0.1             # .env file support
+python-decouple==3.8             # Configuration management
 
 # ---------------------------
-# Logging and monitoring
+# Performance and Caching
 # ---------------------------
-structlog==24.1.0
+aiocache==0.12.2                 # Async caching
+orjson==3.9.15                   # Fast JSON serialization
 
 # ---------------------------
-# Date and time utilities
+# Logging and Monitoring
 # ---------------------------
-python-dateutil==2.9.0.post0
+structlog==24.1.0                # Structured logging
+python-json-logger==2.0.7        # JSON log formatter
 
 # ---------------------------
-# Development and testing (optional)
+# Date/Time and Utilities
 # ---------------------------
-pytest==8.0.0
-pytest-asyncio==0.23.5
-pytest-mock==3.14.0
+python-dateutil==2.9.0.post0     # Date parsing utilities
 
 # ---------------------------
-# Database utilities (optional future expansion)
+# Rate Limiting and Async Control
 # ---------------------------
-sqlalchemy==2.0.27
-alembic==1.13.1
+asyncio-throttle==1.0.2          # Rate limiting for async operations
+tenacity==8.2.3                  # Retry mechanisms
 
 # ---------------------------
-# Performance and optimization
+# Production Dependencies Only
 # ---------------------------
-aiocache==0.12.2
+# Removed development/testing packages for smaller image:
+# - pytest, pytest-asyncio, pytest-mock (dev only)
+# - sqlalchemy, alembic (not needed for chatbot service)
 
 # ---------------------------
-# Security utilities
+# Optional: Observability (uncomment for production monitoring)
 # ---------------------------
-bcrypt==4.1.2
-passlib[bcrypt]==1.7.4
-
-# ---------------------------
-# JSON utilities
-# ---------------------------
-orjson==3.9.15
+# prometheus-client==0.20.0      # Metrics collection
+# opentelemetry-api==1.23.0      # Distributed tracing
