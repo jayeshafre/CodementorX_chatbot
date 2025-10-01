@@ -40,14 +40,36 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+    color: inherit;
+}
+
+body,
+html {
+    color: #1f2937 !important;
+}
+
+input,
+textarea,
+select,
+button {
+    color: #1f2937 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #9ca3af !important;
+}
+
 @layer base {
     * {
         @apply border-border;
     }
 
-    /* Override index.css body styles */
     body {
-        @apply bg-gradient-to-br from-slate-50 via-blue-50 to-green-50 font-sans text-gray-900;
+        @apply bg-gradient-to-br from-slate-50 via-blue-50 to-green-50 font-sans;
+        color: #1f2937 !important;
+        /* ADD THIS - Forces dark gray text */
         overflow-x: hidden;
         display: block !important;
         place-items: unset !important;
@@ -56,11 +78,39 @@
         background-size: 20px 20px;
     }
 
+    /* ADD THESE NEW RULES */
     input,
-    select,
-    textarea {
-        font-size: 16px;
+    textarea,
+    select {
+        color: #1f2937 !important;
     }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: #9ca3af !important;
+    }
+
+    button {
+        color: inherit;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: #111827;
+    }
+
+    p {
+        color: #374151;
+    }
+
+    label {
+        color: #374151;
+    }
+
 
     @media (max-width: 640px) {
 
@@ -94,6 +144,7 @@
         min-height: 48px;
         background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(10px);
+        color: #1f2937 !important;
     }
 
     .form-input:focus {
