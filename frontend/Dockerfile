@@ -1,16 +1,37 @@
-# React Frontend Dockerfile
-FROM node:18-alpine as builder
+# Multi-stage React Dockerfile for CodeMentorX Frontend
+# Optimized for AWS Free Tier deployment with minimal resource usage
 
+# Stage 1: Build (Node.js for building the React app)
+FROM node:20-alpine as builder
+
+# Set working directory
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci && npm cache clean --force
 
-# Copy source and build
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install ALL dependencies (including devDependencies needed for build)
+RUN npm ci --ignore-scripts && \
+    npm cache clean --force
+
+# Copy source code
 COPY . .
+
+# Build arguments for environment variables (passed during build)
+ARG VITE_DJANGO_API_URL=http://localhost:8000
+ARG VITE_CHATBOT_API_URL=http://localhost:8001/api
+ARG VITE_APP_NAME=CodementorX
+
+# Set environment variables for build
+ENV VITE_DJANGO_API_URL=${VITE_DJANGO_API_URL}
+ENV VITE_CHATBOT_API_URL=${VITE_CHATBOT_API_URL}
+ENV VITE_APP_NAME=${VITE_APP_NAME}
+
+# Build the application
 RUN npm run build
 
-# Production stage with Nginx
-FROM nginx:1.25-alpine as production
+# Stage 2: Production (Nginx for serving static files)
+FROM nginx:alpine
 
 # Install curl for health checks
 RUN apk add --no-cache curl
@@ -18,53 +39,22 @@ RUN apk add --no-cache curl
 # Remove default nginx config
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Copy custom nginx config
-COPY <<EOF /etc/nginx/conf.d/default.conf
-server {
-    listen 3000;
-    server_name localhost;
-    root /usr/share/nginx/html;
-    index index.html index.htm;
-    
-    # Gzip compression
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-    
-    # Security headers
-    add_header X-Frame-Options DENY;
-    add_header X-Content-Type-Options nosniff;
-    add_header X-XSS-Protection "1; mode=block";
-    
-    # Handle React Router (SPA)
-    location / {
-        try_files \$uri \$uri/ /index.html;
-    }
-    
-    # Health check endpoint
-    location /health {
-        access_log off;
-        return 200 "healthy\n";
-        add_header Content-Type text/plain;
-    }
-    
-    # API proxy (optional - for future use)
-    location /api/ {
-        return 404;
-    }
-    
-    # Cache static assets
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
-EOF
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/
 
 # Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 3000 (matching nginx config)
+# Create nginx user and set permissions
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /usr/share/nginx/html
+
+# Expose port 3000 (nginx will serve on this port)
 EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/ || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,28 @@
+services:
+  django:
+    env_file:
+      - .env
+    volumes:
+      - ./backend/django_auth:/app:cached
+      - django_static:/app/staticfiles
+      - django_media:/app/media
+    environment:
+      PYTHONUNBUFFERED: 1
+      DJANGO_DEBUG: "True"
+      DEBUG: "True"
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    
+  postgres:
+    env_file:
+      - .env
+
+  fastapi:
+    env_file:
+      - .env
+    volumes:
+      - ./backend/chatbot:/app:cached
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+
+  frontend:
+    env_file:
+      - .env

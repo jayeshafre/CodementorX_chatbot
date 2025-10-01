@@ -84,3 +84,7 @@ htmlcov/
 # Temporary files
 tmp/
 temp/
+
+# Ignore collected static files
+/staticfiles/
+/static/
