@@ -102,7 +102,7 @@ jobs:
 
       # Step 8: Upload coverage to GitHub (for viewing in PR)
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # ✅ UPGRADED to v4
         with:
           name: django-coverage-report
           path: backend/django_auth/htmlcov/
@@ -342,7 +342,7 @@ jobs:
 
       # Upload security scan results
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3  # ✅ UPGRADED to v3
         with:
           sarif_file: 'trivy-python-results.sarif'
         if: always()
