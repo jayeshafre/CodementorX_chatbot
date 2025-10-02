@@ -21,6 +21,13 @@ env:
   DOCKER_BUILDKIT: 1
   COMPOSE_DOCKER_CLI_BUILD: 1
 
+# Permissions required for security scanning
+permissions:
+  contents: read          # Read repository contents
+  security-events: write  # Upload security scan results
+  actions: read           # Read workflow runs
+  pull-requests: write    # Comment on PRs
+
 jobs:
   # ============================================
   # JOB 1: Test Django Backend
